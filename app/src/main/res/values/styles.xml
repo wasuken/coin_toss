@@ -3,14 +3,15 @@
     <color name="icon_background">#102B28</color>
     <style name="AppTheme" parent="android:style/Theme.Material.Light.NoActionBar">
         <item name="android:fontFamily">sans</item>
-        <item name="android:colorAccent">#1E6253</item>
-        <item name="android:windowLightStatusBar">true</item>
-        <item name="android:windowLightNavigationBar">true</item>
-        <item name="android:windowBackground">#F7F5EF</item>
-        <item name="android:statusBarColor">#F7F5EF</item>
-        <item name="android:navigationBarColor">#F7F5EF</item>
+        <item name="android:colorAccent">@color/accent</item>
+        <item name="android:windowLightStatusBar">@bool/light_system_bars</item>
+        <item name="android:windowLightNavigationBar">@bool/light_system_bars</item>
+        <item name="android:windowBackground">@color/screen_background</item>
+        <item name="android:statusBarColor">@color/screen_background</item>
+        <item name="android:navigationBarColor">@color/screen_background</item>
+        <item name="android:forceDarkAllowed">false</item>
         <item name="android:windowActionModeOverlay">true</item>
         <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_coin</item>
-        <item name="android:windowSplashScreenBackground">#F7F5EF</item>
+        <item name="android:windowSplashScreenBackground">@color/screen_background</item>
     </style>
 </resources>

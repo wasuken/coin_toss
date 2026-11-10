@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="screen_background">#101C19</color>
+    <color name="text_primary">#E5EDE5</color>
+    <color name="text_secondary">#AABAB0</color>
+    <color name="navigation_background">#16251F</color>
+    <color name="navigation_selected">#304C3E</color>
+    <color name="summary_background">#25382E</color>
+    <color name="card_background">#1C2D25</color>
+    <color name="coin_badge_background">#3B3220</color>
+    <color name="coin_badge_foreground">#F0CB78</color>
+    <color name="action_background">#ACD4B7</color>
+    <color name="action_foreground">#10291C</color>
+    <color name="ripple">#408DB69B</color>
+    <color name="accent">#ACD4B7</color>
+    <bool name="light_system_bars">false</bool>
+</resources>
