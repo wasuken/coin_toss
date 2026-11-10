@@ -1,6 +1,8 @@
 package jp.cointoss.app;
 
 import android.app.Activity;
+import android.app.UiModeManager;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Insets;
@@ -8,6 +10,7 @@ import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.RippleDrawable;
 import android.content.res.ColorStateList;
+import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.Gravity;
@@ -37,7 +40,7 @@ public final class MainActivity extends Activity {
     private LinearLayout root, content, navigation;
     private CoinView coin;
     private TextView result, subtitle, count;
-    private Button toss;
+    private Button toss, modeButton;
     private int tab;
     private boolean busy;
     private float touchY;
@@ -48,6 +51,20 @@ public final class MainActivity extends Activity {
             render();
         }
     };
+
+    /** Android 8〜11では画面の生成前にアプリ独自の明暗設定を反映する。 */
+    @Override protected void attachBaseContext(Context base) {
+        SharedPreferences appearance = base.getSharedPreferences("appearance", MODE_PRIVATE);
+        if (Build.VERSION.SDK_INT < 31 && appearance.contains("night_mode")) {
+            Configuration configuration = new Configuration(base.getResources().getConfiguration());
+            int mode = appearance.getInt("night_mode", UiModeManager.MODE_NIGHT_NO);
+            configuration.uiMode = (configuration.uiMode & ~Configuration.UI_MODE_NIGHT_MASK)
+                    | (mode == UiModeManager.MODE_NIGHT_YES
+                    ? Configuration.UI_MODE_NIGHT_YES : Configuration.UI_MODE_NIGHT_NO);
+            base = base.createConfigurationContext(configuration);
+        }
+        super.attachBaseContext(base);
+    }
 
     /** 保存済み履歴を読み込み、安全な表示領域と2画面を構築する。 */
     @Override public void onCreate(Bundle state) {
@@ -127,9 +144,7 @@ public final class MainActivity extends Activity {
         page.setPadding(dp(24), dp(24), dp(24), dp(20));
         scroll.addView(page);
         content.addView(scroll, new LinearLayout.LayoutParams(-1, -1));
-        TextView brand = text("COIN / TOSS", 12, muted);
-        brand.setLetterSpacing(.22f);
-        page.addView(brand);
+        addPageHeader(page, "COIN / TOSS");
         TextView title = text("運を、ひと投げ。", 30, ink);
         title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         addSpace(page, 16);
@@ -187,7 +202,7 @@ public final class MainActivity extends Activity {
     private void renderHistory() {
         LinearLayout header = column();
         header.setPadding(dp(24), dp(24), dp(24), dp(20));
-        header.addView(text("YOUR FLIPS", 12, muted));
+        addPageHeader(header, "YOUR FLIPS");
         TextView title = text("コインの記録", 30, ink);
         title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         addSpace(header, 12);
@@ -274,14 +289,63 @@ public final class MainActivity extends Activity {
     /** 完了・エラー後に操作を再開し、連打による重複を防ぐ。 */
     private void finishToss() {
         busy = false;
-        toss.setEnabled(true);
-        coin.setEnabled(true);
+        if (toss != null) toss.setEnabled(true);
+        if (coin != null) coin.setEnabled(true);
         setNavigationEnabled(true);
     }
 
-    /** トス中の画面切り替えを抑止する。 */
+    /** 処理中はタブと表示モードの切り替えを抑止する。 */
     private void setNavigationEnabled(boolean enabled) {
         for (int i = 0; i < navigation.getChildCount(); i++) navigation.getChildAt(i).setEnabled(enabled);
+        modeButton.setEnabled(enabled);
+    }
+
+    /** 両画面の右上に次の表示モードが分かる切り替えボタンを配置する。 */
+    private void addPageHeader(LinearLayout page, String label) {
+        LinearLayout header = new LinearLayout(this);
+        header.setGravity(Gravity.CENTER_VERTICAL);
+        TextView brand = text(label, 12, muted);
+        brand.setLetterSpacing(.16f);
+        header.addView(brand, new LinearLayout.LayoutParams(0, -2, 1));
+        boolean dark = !getResources().getBoolean(R.bool.light_system_bars);
+        modeButton = new Button(this);
+        modeButton.setText(dark ? "☀ ライト" : "☾ ダーク");
+        modeButton.setTextSize(13);
+        modeButton.setTextColor(ink);
+        modeButton.setAllCaps(false);
+        modeButton.setContentDescription(dark ? "ライトモードに切り替える" : "ダークモードに切り替える");
+        modeButton.setBackground(ripple(color(R.color.navigation_selected), 16));
+        modeButton.setOnClickListener(view -> changeMode());
+        header.addView(modeButton, new LinearLayout.LayoutParams(dp(120), dp(48)));
+        page.addView(header, new LinearLayout.LayoutParams(-1, -2));
+    }
+
+    /** 次の明暗設定を保存し、端末全体の設定を変えずにアプリだけを切り替える。 */
+    private void changeMode() {
+        if (busy) return;
+        busy = true;
+        setNavigationEnabled(false);
+        if (toss != null) toss.setEnabled(false);
+        if (coin != null) coin.setEnabled(false);
+        int mode = getResources().getBoolean(R.bool.light_system_bars)
+                ? UiModeManager.MODE_NIGHT_YES : UiModeManager.MODE_NIGHT_NO;
+        STORAGE_WORKER.execute(() -> {
+            boolean saved = getSharedPreferences("appearance", MODE_PRIVATE).edit()
+                    .putInt("night_mode", mode).commit();
+            runOnUiThread(() -> {
+                if (isDestroyed()) return;
+                if (!saved) {
+                    finishToss();
+                    Toast.makeText(this, "表示モードを保存できませんでした", Toast.LENGTH_LONG).show();
+                    return;
+                }
+                if (Build.VERSION.SDK_INT >= 31) {
+                    getSystemService(UiModeManager.class).setApplicationNightMode(mode);
+                } else {
+                    recreate();
+                }
+            });
+        });
     }
 
     /** 選択状態を読み上げ可能なボトムタブを作成する。 */
