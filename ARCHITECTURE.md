@@ -31,6 +31,7 @@ scripts/
 tests/HistoryTest.java                 履歴モデル10項目の検証
 build/                                生成物・ローカル署名鍵（Git対象外）
 README.md                             WSLでのビルド・USB接続・検証手順
+LICENSE                               MITライセンス
 ```
 
 ルートとappのGradle設定はAndroid Studio向け。標準手順はネットワーク不要の `scripts/build.py`。
@@ -84,6 +85,10 @@ API 31以降は `UiModeManager.setApplicationNightMode()` でアプリ単位に�
 
 ## ビルド・配布
 
+ソースコードはMITライセンスで公開する。ライセンス全文は `LICENSE` に記載する。
+
+署名鍵のパスワードは環境変数 `COIN_TOSS_KEYSTORE_PASSWORD` から取得し、keytoolとapksignerには環境変数名を渡す。未設定の場合はビルド開始前に停止する。既存の鍵を使う場合は、その鍵の作成時の値を設定する。パスワードの値はコードやドキュメントに保存しない。
+
 `scripts/build.py` はaapt2 → javac → d8 → zipalign → apksignerの順で処理し、`build/outputs/apk/coin-toss-debug.apk` を生成する。署名検証と整列検証も行う。マニフェストのpackageは一時コピーに補完し、Gradle向けソースのnamespace設定と両立させる。
 
 ローカルデバッグ鍵は `build/debug.keystore`。ビルド間で保持する。生成物と鍵はGit対象外。`build/` 全体を消すと更新用署名鍵も失う。Gradle構成はAndroid Gradle Plugin 8.10.1、JDK 17、Gradle 8.11.1以上の8系を想定。Wrapperは同梱していない。PythonビルドとGradleの成果物・デバッグ署名鍵は別なので、端末の更新は同じビルド方式で行う。
@@ -105,5 +110,3 @@ Manifestのuses-permissionはゼロ。INTERNET、外部ストレージ、カメ�
 同日のダークモード追加後も実機へ更新インストールし、ライト／ダーク両方のトス・履歴画面のPNGを確認した。OS設定変更による再生成後も履歴件数と履歴タブの選択状態を保持することを確認し、検証後は端末の明暗設定を元へ戻した。履歴モデルの10項目も再実行して成功した。
 
 モード切り替えボタン追加後は、同実機で両画面のボタン操作と画面PNG、切り替え後の選択タブ・履歴件数、強制終了後のモード復元を確認した。端末全体の明暗設定が変わらないことも確認し、履歴テスト10項目とAPK署名・整列検証が成功した。API 26〜30のConfigurationによる切り替えは実機未検証。
-
-署名鍵のパスワードは環境変数 `COIN_TOSS_KEYSTORE_PASSWORD` から取得し、値をコードやドキュメントに保存しない。

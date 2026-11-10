@@ -21,6 +21,8 @@ export PATH="$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$PATH"
 python3 scripts/build.py
 ```
 
+ビルド前に署名鍵のパスワードを環境変数 `COIN_TOSS_KEYSTORE_PASSWORD` に設定してください。新規の鍵では任意の値、既存の鍵では作成時の値を使います。値はリポジトリに保存しないでください。
+
 APK: `build/outputs/apk/coin-toss-debug.apk`。SDK導入済みならネットワーク、Gradle、Android Studioは不要です。リソースコンパイル、Java→DEX、zipalign、署名、署名検証を自動で行います。
 
 初回に `build/debug.keystore` を作成し、以降も同じ鍵を使います。**履歴を残して更新するには、この鍵を保持してください。** `build/` 全体を削除すると鍵も消えるので、通常は `build/intermediates/` だけ削除します。署名鍵が変わると更新インストールできません。ストア配布用ではなく、ローカルインストール用APKです。
@@ -86,4 +88,6 @@ python3 scripts/smoke.py
 
 AsyncStorageと同じ用途として、Android標準のアプリ専用SharedPreferencesを使用します。履歴には表／裏と端末の記録時刻を保存し、追加・復元時に最大100件を保証します。表示モードは履歴と別の設定領域に保存します。自動バックアップは無効。アンインストールまたはデータ消去で履歴と設定が消えます。構成は [ARCHITECTURE.md](ARCHITECTURE.md) を参照してください。
 
-ビルド前に環境変数 `COIN_TOSS_KEYSTORE_PASSWORD` に署名鍵のパスワードを設定してください。
+## ライセンス
+
+MIT License。全文は [LICENSE](LICENSE) を参照してください。
